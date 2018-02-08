@@ -6,9 +6,9 @@ from django.apps import apps
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.admin.options import TO_FIELD_VAR
+from django.contrib.admin.templatetags.admin_modify import register
 from django.contrib.admin.templatetags.admin_modify import \
     submit_row as original_submit_row
-from django.contrib.admin.templatetags.admin_modify import register
 from django.contrib.admin.utils import flatten, unquote
 from django.contrib.admin.views.main import ChangeList
 from django.contrib.auth import get_permission_codename
@@ -190,6 +190,13 @@ class AdminViewPermissionBaseModelAdmin(admin.options.BaseModelAdmin):
                 readonly_fields = [
                     f for f in readonly_fields if f not in excluded_fields
                 ]
+
+            # django-parler compatibility: if this model is translatable,
+            # ensure its fields are set to readonly too.
+            if hasattr(self.model, '_parler_meta'):
+                readonly_fields += list(
+                    self.model._parler_meta._fields_to_model.keys()
+                )
 
         return tuple(readonly_fields)
 
